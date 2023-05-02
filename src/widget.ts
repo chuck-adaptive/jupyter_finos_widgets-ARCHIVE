@@ -61,6 +61,8 @@ export class ExampleView extends DOMWidgetView {
 
 }
 
+// Channel Select
+
 export class ChannelModel extends DOMWidgetModel {
   defaults() {
     return {
@@ -171,5 +173,72 @@ export class ChannelView extends DOMWidgetView {
     }
     
   }
+}
+
+// Ticker Input
+
+export class TickerInputModel extends DOMWidgetModel {
+  defaults() {
+    return {
+      ...super.defaults(),
+      _model_name: TickerInputModel.model_name,
+      _model_module: TickerInputModel.model_module,
+      _model_module_version: TickerInputModel.model_module_version,
+      _view_name: TickerInputModel.view_name,
+      _view_module: TickerInputModel.view_module,
+      _view_module_version: TickerInputModel.view_module_version,
+      ticker: ''
+    };
+  }
+
+  static serializers: ISerializers = {
+    ...DOMWidgetModel.serializers,
+    // Add any extra serializers here
+  };
+
+  static model_name = 'TickerInputModel';
+  static model_module = MODULE_NAME;
+  static model_module_version = MODULE_VERSION;
+  static view_name = 'TickerInputView'; // Set to null if no view
+  static view_module = MODULE_NAME; // Set to null if no view
+  static view_module_version = MODULE_VERSION;
+}
+
+export class TickerInputView extends DOMWidgetView {
+
+  render() {
+    const input = document.createElement("input");
+    input.type = 'text';
+    this.el.appendChild(input);
+
+    const submit = document.createElement('button');
+    submit.textContent = 'Submit';
+    submit.addEventListener('click', () => {
+      const ticker = input.value;
+      if (ticker) {
+        this.model.set('ticker', input.value);
+        fdc3.broadcast({
+          type: 'fdc3.instrument',
+          id: { ticker }
+        });
+      }
+    });
+    this.el.appendChild(submit);
+
+    const tickerDisplay = document.createElement('p');
+    tickerDisplay.classList.add('current-ticker');
+    this.el.appendChild(tickerDisplay);
+
+    this.renderTicker();
+    this.model.on('change:ticker', this.renderTicker, this);
+    
+  }
+
+  renderTicker() {
+    const ticker = this.model.get('ticker');
+    const tickerDisplay: any = this.el.querySelector('.current-ticker');
+    tickerDisplay.textContent = ticker;
+  }
+
 }
 

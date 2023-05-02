@@ -6,6 +6,7 @@
 
 from .example import ExampleWidget
 from .channel import ChannelWidget
+from .ticker_input import TickerInputWidget
 from ._version import __version__, version_info
 
 def _jupyter_labextension_paths():

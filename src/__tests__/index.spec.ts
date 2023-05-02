@@ -11,7 +11,8 @@ import { ExampleModel } from '..';
 describe('Example', () => {
   describe('ExampleModel', () => {
     it('should be createable', () => {
-      const model = createTestModel(ExampleModel);
+      const state = { value: 'Foo Bar!' };
+      const model = createTestModel(ExampleModel, state);
       expect(model).toBeInstanceOf(ExampleModel);
       expect(model.get('value')).toEqual('Hello World');
     });
