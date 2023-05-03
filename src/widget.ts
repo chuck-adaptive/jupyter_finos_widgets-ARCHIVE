@@ -23,7 +23,7 @@ export class ExampleModel extends DOMWidgetModel {
       _view_name: ExampleModel.view_name,
       _view_module: ExampleModel.view_module,
       _view_module_version: ExampleModel.view_module_version,
-      fdc3Info: {}
+      fdc3Info: {},
     };
   }
 
@@ -48,17 +48,15 @@ export class ExampleModel extends DOMWidgetModel {
 }
 
 export class ExampleView extends DOMWidgetView {
-
   render() {
     this.value_changed();
     this.model.on('change:fdc3Info', this.value_changed, this);
   }
 
-   value_changed() {
-     const { fdc3Version } = this.model.get('fdc3Info');
-     this.el.textContent = `FDC3 Version: ${fdc3Version}`;
+  value_changed() {
+    const { fdc3Version } = this.model.get('fdc3Info');
+    this.el.textContent = `FDC3 Version: ${fdc3Version}`;
   }
-
 }
 
 // Channel Select
@@ -74,8 +72,8 @@ export class ChannelModel extends DOMWidgetModel {
       _view_module: ChannelModel.view_module,
       _view_module_version: ChannelModel.view_module_version,
       systemChannels: [],
-      channelId: null
-    }
+      channelId: null,
+    };
   }
 
   async initialize(attr: any, opts: any) {
@@ -101,7 +99,7 @@ export class ChannelModel extends DOMWidgetModel {
 
 export class ChannelView extends DOMWidgetView {
   render() {
-    const channelList = document.createElement("ul");
+    const channelList = document.createElement('ul');
     channelList.classList.add('channel-list');
 
     this.el.append(channelList);
@@ -116,25 +114,27 @@ export class ChannelView extends DOMWidgetView {
     const channels = this.model.get('systemChannels');
     const channelId = this.model.get('channelId');
 
-    channelList?.replaceChildren(...channels.map((chan: any) => {
-      const { color, name } = chan.displayMetadata;
-      const channelButton = document.createElement('button');
+    channelList?.replaceChildren(
+      ...channels.map((chan: any) => {
+        const { color, name } = chan.displayMetadata;
+        const channelButton = document.createElement('button');
 
-      channelButton.classList.add(`channel-button-${chan.id}`);
-      channelButton.style.backgroundColor = color;
-      channelButton.textContent = name;
-      channelButton.addEventListener('click', async () => {
-        await fdc3.joinChannel(chan.id);
-        this.model.set('channelId', chan.id);
-      });
+        channelButton.classList.add(`channel-button-${chan.id}`);
+        channelButton.style.backgroundColor = color;
+        channelButton.textContent = name;
+        channelButton.addEventListener('click', async () => {
+          await fdc3.joinChannel(chan.id);
+          this.model.set('channelId', chan.id);
+        });
 
-      if (chan.id === channelId) {
-        channelButton.disabled = true;
-        channelButton.classList.add('disabled');
-      }
+        if (chan.id === channelId) {
+          channelButton.disabled = true;
+          channelButton.classList.add('disabled');
+        }
 
-      return channelButton;
-    }));
+        return channelButton;
+      })
+    );
 
     const leaveButton = document.createElement('button');
     leaveButton.textContent = 'Leave';
@@ -171,7 +171,6 @@ export class ChannelView extends DOMWidgetView {
     } else {
       leaveButton.disabled = true;
     }
-    
   }
 }
 
@@ -187,7 +186,7 @@ export class TickerInputModel extends DOMWidgetModel {
       _view_name: TickerInputModel.view_name,
       _view_module: TickerInputModel.view_module,
       _view_module_version: TickerInputModel.view_module_version,
-      ticker: ''
+      ticker: '',
     };
   }
 
@@ -205,9 +204,8 @@ export class TickerInputModel extends DOMWidgetModel {
 }
 
 export class TickerInputView extends DOMWidgetView {
-
   render() {
-    const input = document.createElement("input");
+    const input = document.createElement('input');
     input.type = 'text';
     this.el.appendChild(input);
 
@@ -219,7 +217,7 @@ export class TickerInputView extends DOMWidgetView {
         this.model.set('ticker', input.value);
         fdc3.broadcast({
           type: 'fdc3.instrument',
-          id: { ticker }
+          id: { ticker },
         });
       }
     });
@@ -231,7 +229,6 @@ export class TickerInputView extends DOMWidgetView {
 
     this.renderTicker();
     this.model.on('change:ticker', this.renderTicker, this);
-    
   }
 
   renderTicker() {
@@ -239,6 +236,53 @@ export class TickerInputView extends DOMWidgetView {
     const tickerDisplay: any = this.el.querySelector('.current-ticker');
     tickerDisplay.textContent = ticker;
   }
-
 }
 
+// ContextView
+
+export class ContextModel extends DOMWidgetModel {
+  defaults() {
+    return {
+      ...super.defaults(),
+      _model_name: ContextModel.model_name,
+      _model_module: ContextModel.model_module,
+      _model_module_version: ContextModel.model_module_version,
+      _view_name: ContextModel.view_name,
+      _view_module: ContextModel.view_module,
+      _view_module_version: ContextModel.view_module_version,
+      context: {},
+    };
+  }
+
+  async initialize(attr: any, opts: any) {
+    super.initialize(attr, opts);
+    await fdc3.fdc3Ready();
+    fdc3.addContextListener('fdc3.instrument', (ctx) => {
+      this.set('context', ctx);
+    });
+  }
+
+  static serializers: ISerializers = {
+    ...DOMWidgetModel.serializers,
+    // Add any extra serializers here
+  };
+
+  static model_name = 'ContextModel';
+  static model_module = MODULE_NAME;
+  static model_module_version = MODULE_VERSION;
+  static view_name = 'ContextView'; // Set to null if no view
+  static view_module = MODULE_NAME; // Set to null if no view
+  static view_module_version = MODULE_VERSION;
+}
+
+export class ContextView extends DOMWidgetView {
+  render() {
+    this.value_changed();
+    this.model.on('change:context', this.value_changed, this);
+  }
+
+  value_changed() {
+    const ctx = this.model.get('context');
+    this.el.textContent = `Context: ${JSON.stringify(ctx)}`;
+  }
+}
