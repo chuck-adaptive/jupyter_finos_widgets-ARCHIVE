@@ -5,6 +5,9 @@
 # Distributed under the terms of the Modified BSD License.
 
 from .example import ExampleWidget
+from .channel import ChannelWidget
+from .context import ContextWidget
+from .ticker_input import TickerInputWidget
 from ._version import __version__, version_info
 
 def _jupyter_labextension_paths():
