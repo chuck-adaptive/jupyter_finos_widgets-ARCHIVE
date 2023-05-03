@@ -286,3 +286,71 @@ export class ContextView extends DOMWidgetView {
     this.el.textContent = `Context: ${JSON.stringify(ctx)}`;
   }
 }
+
+// Connection Status Badge
+
+export class ConnectionStatusModel extends DOMWidgetModel {
+  defaults() {
+    return {
+      ...super.defaults(),
+      _model_name: ConnectionStatusModel.model_name,
+      _model_module: ConnectionStatusModel.model_module,
+      _model_module_version: ConnectionStatusModel.model_module_version,
+      _view_name: ConnectionStatusModel.view_name,
+      _view_module: ConnectionStatusModel.view_module,
+      _view_module_version: ConnectionStatusModel.view_module_version,
+      fdc3Info: {},
+    };
+  }
+
+  static serializers: ISerializers = {
+    ...DOMWidgetModel.serializers,
+  };
+
+  async initialize(attr: any, opts: any) {
+    super.initialize(attr, opts);
+    await fdc3.fdc3Ready();
+    const info = await fdc3.getInfo();
+    this.set('fdc3Info', info);
+  }
+
+  static model_name = 'ConnectionStatusModel';
+  static model_module = MODULE_NAME;
+  static model_module_version = MODULE_VERSION;
+  static view_name = 'ConnectionStatusView';
+  static view_module = MODULE_NAME;
+  static view_module_version = MODULE_VERSION;
+}
+
+export class ConnectionStatusView extends DOMWidgetView {
+  render() {
+    const fdc3Info = this.value_changed();
+    this._status = document.createElement('p');
+    this._status.classList.add(
+      isFalsyOrEmpty(fdc3Info) ? 'success' : 'failure'
+    );
+    this._status.innerHTML = isFalsyOrEmpty(fdc3Info) ? 'found' : 'not found';
+
+    this.el.classList.add('connection-status-widget');
+
+    this._badge = document.createElement('p');
+    this._badge.innerHTML = 'FDC3 API connection';
+
+    this.el.appendChild(this._badge);
+    this.el.appendChild(this._status);
+  }
+
+  value_changed() {
+    return this.model.get('fdc3Info');
+  }
+
+  private _badge: HTMLParagraphElement;
+  private _status: HTMLParagraphElement;
+}
+
+const isFalsyOrEmpty = (value: any) => {
+  if (typeof value === 'object') {
+    return Object.keys(value).length ? true : false;
+  }
+  return value ? true : false;
+};
