@@ -4,7 +4,7 @@
     "applicationIcon": "https://openfin.github.io/golden-prototype/favicon.ico",
     "autoShow": false,
     "defaultWindowOptions": {
-      "fdc3InteropApi" : "1.2",
+      "fdc3InteropApi": "2.0",
       "cornerRounding": {
         "height": 10,
         "width": 10
