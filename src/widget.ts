@@ -299,20 +299,12 @@ export class ConnectionStatusModel extends DOMWidgetModel {
       _view_name: ConnectionStatusModel.view_name,
       _view_module: ConnectionStatusModel.view_module,
       _view_module_version: ConnectionStatusModel.view_module_version,
-      fdc3Info: {},
     };
   }
 
   static serializers: ISerializers = {
     ...DOMWidgetModel.serializers,
   };
-
-  async initialize(attr: any, opts: any) {
-    super.initialize(attr, opts);
-    await fdc3.fdc3Ready();
-    const info = await fdc3.getInfo();
-    this.set('fdc3Info', info);
-  }
 
   static model_name = 'ConnectionStatusModel';
   static model_module = MODULE_NAME;
@@ -323,34 +315,45 @@ export class ConnectionStatusModel extends DOMWidgetModel {
 }
 
 export class ConnectionStatusView extends DOMWidgetView {
-  render() {
-    const fdc3Info = this.value_changed();
-    this._status = document.createElement('p');
-    this._status.classList.add(
-      isFalsyOrEmpty(fdc3Info) ? 'success' : 'failure'
+  async render() {
+    const channel_color = getChannelColor(
+      isFalsyOrEmpty(window.fdc3) ? undefined : await fdc3.getCurrentChannel()
     );
-    this._status.innerHTML = isFalsyOrEmpty(fdc3Info) ? 'found' : 'not found';
 
     this.el.classList.add('connection-status-widget');
 
     this._badge = document.createElement('p');
     this._badge.innerHTML = 'FDC3 API connection';
 
+    this._status = document.createElement('p');
+    this._status.innerHTML = isFalsyOrEmpty(window.fdc3)
+      ? 'not found'
+      : 'found';
+    this._status.classList.add(
+      isFalsyOrEmpty(window.fdc3) ? 'failure' : 'success'
+    );
+    this._status.style.borderBottom = `7px solid ${channel_color}`;
+
     this.el.appendChild(this._badge);
     this.el.appendChild(this._status);
   }
 
   value_changed() {
-    return this.model.get('fdc3Info');
+    return this.model.get('fdc3_info');
   }
 
   private _badge: HTMLParagraphElement;
   private _status: HTMLParagraphElement;
 }
 
+const getChannelColor = (channel_data: any): string => {
+  const default_color = '#808080';
+  return channel_data ? channel_data.displayMetadata.color : default_color;
+};
+
 const isFalsyOrEmpty = (value: any) => {
   if (typeof value === 'object') {
-    return Object.keys(value).length ? true : false;
+    return Object.keys(value).length ? false : true;
   }
-  return value ? true : false;
+  return value ? false : true;
 };
